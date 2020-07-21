@@ -123,7 +123,7 @@ async function saveBlock(block, latest = false) {
   const txs = block.txs
   block.txs = []
   await Promise.all(txs.map(async (tx) => {
-    ppl.hset('ng:explorer:tx:hash', tx.hash, JSON.stringify(tx))
+    ppl.hset('ng:explorer:tx', tx.hash, JSON.stringify(tx))
     ppl.zadd('ng:explorer:account:tx', tx.convener, tx.hash)
     // get and update account 
     const res = await axios.post(

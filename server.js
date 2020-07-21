@@ -40,21 +40,18 @@ app.get("/block/:hashOrHeight", async (req, res) => {
     return;
   }
 
-  try {
-    res.send(JSON.stringify(await getBlockByHashOrHeight(hashOrHeight)));
-  } catch (e) {
-    res.sendStatus(404);
+  let jsonBlock;
+  if (hashOrHeight.length === 64) {
+    jsonBlock = await redis.hget("ng:explorer:block:hash", hashOrHeight);
+  } else {
+    const blockHash = await redis.hget(
+      "ng:explorer:block:height",
+      hashOrHeight
+    );
+    jsonBlock = await redis.hget("ng:explorer:block:hash", blockHash);
   }
-});
-
-app.get("/address/:address", async (req, res) => {
-  const stats = await redis.hget("ng:explorer:latest", "stats");
-  res.send(stats);
-});
-
-app.get("/account/:account", async (req, res) => {
-  const stats = await redis.hget("ng:explorer:latest", "stats");
-  res.send(stats);
+  
+  res.send(jsonBlock);
 });
 
 app.get("/tx/:txHash/block", async (req, res) => {
@@ -74,38 +71,48 @@ app.get("/tx/:txHash/block", async (req, res) => {
   res.send(blockHash);
 });
 
-async function getBlockByHashOrHeight(hashOrHeight) {
-  let jsonBlock;
-  if (hashOrHeight.length === 64) {
-    jsonBlock = await redis.hget("ng:explorer:block:hash", hashOrHeight);
-  } else {
-    const blockHash = await redis.hget(
-      "ng:explorer:block:height",
-      hashOrHeight
-    );
-    jsonBlock = await redis.hget("ng:explorer:block:hash", blockHash);
+app.get("/tx/:txHash", async (req, res) => {
+  const txHash = req.params.txHash;
+
+  if (txHash == null || txHash.length !== 64) {
+    res.sendStatus(404);
+    return;
   }
 
-  const block = JSON.parse(jsonBlock);
-  await Promise.all(
-    block.txs.map(async (txHash, i) => {
-      const tx = await getTxByHash(txHash);
-      block.txs[i] = tx;
-    })
-  );
+  const tx = await redis.hget("ng:explorer:tx", txHash);
 
-  return block;
-}
+  res.send(tx);
+});
 
-async function getTxByHash(txHash) {
-  const jsonTx = await redis.hget("ng:explorer:tx:hash", txHash);
-  if (jsonTx == null || jsonTx.length === 0) {
-    throw Error();
+app.get("/account/:num", async (req, res) => {
+  const num = req.params.num;
+
+  if (num == null) {
+    res.sendStatus(404);
+    return;
   }
 
-  return JSON.parse(jsonTx);
-}
+  const account = await redis.hget("ng:explorer:account", num);
 
+  res.send(account);
+});
+
+app.get("/address/:addr", async (req, res) => {
+  const addr = req.params.addr;
+
+  if (addr == null) {
+    res.sendStatus(404);
+    return;
+  }
+
+  const balance = await redis.hget("ng:explorer:address", addr);
+  if (balance == null) {
+    res.sendStatus(404);
+    return;
+  }
+
+  res.send(balance);
+});
 
 async function main() {
   app.listen(port, () =>
