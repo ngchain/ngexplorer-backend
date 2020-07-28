@@ -1,9 +1,9 @@
 const Redis = require("ioredis");
 const express = require("express");
-const port = require("./config").port;
+const config = require("./config")
 const cors = require("cors");
 
-const redis = new Redis();
+const redis = new Redis(config.redis);
 
 const app = express();
 app.use(cors());
@@ -115,8 +115,8 @@ app.get("/address/:addr", async (req, res) => {
 });
 
 async function main() {
-  app.listen(port, () =>
-    console.log(`Explorer listening at http://127.0.0.1:${port}`)
+  app.listen(config.port, () =>
+    console.log(`Explorer listening at http://127.0.0.1:${config.port}`)
   );
 }
 main()
