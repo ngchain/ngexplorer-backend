@@ -1,6 +1,8 @@
 const axios = require('axios').default
 const Redis = require('ioredis')
-const redis = new Redis() // uses defaults unless given configuration object
+const config = require("./config")
+
+const redis = new Redis(config.redis) // uses defaults unless given configuration object
 
 async function init() {
   const res = await axios.post(
