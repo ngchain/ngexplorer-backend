@@ -26,12 +26,12 @@ app.get("/blocks", async (req, res) => {
   for (let h = latestHeight; h > latestHeight - 50; h--) {
     const blockHash = await redis.hget("ng:explorer:block:height", h);
     const jsonBlock = await redis.hget("ng:explorer:block:hash", blockHash);
-    blocks.push(JSON.parse(jsonBlock));
-  }
 
-  blocks = blocks.filter(function (el) {
-    return el != null;
-  });
+    const block = JSON.parse(jsonBlock)
+    if (block != null) {
+      blocks.push(JSON.parse(jsonBlock));
+    }
+  }
 
   res.send(blocks);
 });
