@@ -29,6 +29,10 @@ app.get("/blocks", async (req, res) => {
     blocks.push(JSON.parse(jsonBlock));
   }
 
+  blocks = blocks.filter(function (el) {
+    return el != null;
+  });
+
   res.send(blocks);
 });
 
