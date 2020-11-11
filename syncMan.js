@@ -41,19 +41,25 @@ async function updateStats() {
       JSON.stringify({ id: 0, method: 'getLatestBlock' })
     )
     const block = res.data.result
-    res = await axios.post(
-      'http://127.0.0.1:52521',
-      JSON.stringify({
-        id: 0,
-        method: 'getBlockByHeight',
-        params: { height: block.height - 1 }
-      })
-    )
-    const prevBlock = res.data.result
-    stats.height = block.height
-    stats.difficulty = parseInt(block.difficulty)
-    stats.hashrate =
-      prevBlock.difficulty / (block.timestamp - prevBlock.timestamp)
+    if (block.height == 0) {
+      stats.height = block.height
+      stats.difficulty = parseInt(block.difficulty)
+      stats.hashrate = 0
+    } else {
+      res = await axios.post(
+        'http://127.0.0.1:52521',
+        JSON.stringify({
+          id: 0,
+          method: 'getBlockByHeight',
+          params: { height: block.height - 1 }
+        })
+      )
+      const prevBlock = res.data.result
+      stats.height = block.height
+      stats.difficulty = parseInt(block.difficulty)
+      stats.hashrate =
+        prevBlock.difficulty / (block.timestamp - prevBlock.timestamp)
+    }
   }
 
   // const now = (Date.now() / 1000) | 0
